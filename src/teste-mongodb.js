@@ -1,5 +1,4 @@
-const MongoClient = require('mongodb').MongoClient
-const assert = require('assert')
+const { MongoClient, ObjectId } = require('mongodb')
 
 // Connection URL
 const url = 'mongodb://localhost:27017'
@@ -7,17 +6,28 @@ const url = 'mongodb://localhost:27017'
 // Database Name
 const dbName = 'myproject'
 
-const insertDocuments = async function (db) {
-  // Get the documents collection
-  const collection = db.collection('documents')
-  // Insert some documents
-  const result = await collection.insertMany([
-    { a: 1 }, { a: 2 }, { a: 3 }
-  ])
-  assert.strictEqual(3, result.result.n)
-  assert.strictEqual(3, result.ops.length)
-  console.log('Inserted 3 documents into the collection')
-  return result
+const contato = {
+  collection: '',
+
+  async add (campos) {
+    return await this.collection.insertOne(campos)
+  },
+
+  async get (id) {
+    return await this.collection.find({ _id: ObjectId(id) }).toArray()
+  },
+
+  async list () {
+    return await this.collection.find({}).toArray()
+  },
+
+  async delete (id) {
+    return await this.collection.deleteOne({ _id: ObjectId(id) })
+  },
+
+  async update (id, campos) {
+    return await this.collection.updateOne({ _id: ObjectId(id) }, { $set: campos })
+  }
 }
 
 const main = async function () {
@@ -26,14 +36,31 @@ const main = async function () {
 
   // Use connect method to connect to the Server
   await client.connect()
-
   console.log('Connected successfully to server')
 
   const db = client.db(dbName)
 
-  const result = await insertDocuments(db)
+  contato.collection = db.collection('contato')
 
-  console.log(JSON.stringify(result))
+  let res
+  res = await contato.add({ a: 1 })
+  console.log(JSON.stringify(res.insertedId))
+
+  const id = res.insertedId
+  res = await contato.get(id)
+  console.log(JSON.stringify(res))
+
+  res = await contato.update(id, { b: 2 })
+  console.log(JSON.stringify(res.nModified))
+
+  res = await contato.get(id)
+  console.log(JSON.stringify(res))
+
+  res = await contato.delete(id)
+  console.log(JSON.stringify(res.deletedCount))
+
+  res = await contato.list()
+  console.log(JSON.stringify(res))
 
   client.close()
 }
