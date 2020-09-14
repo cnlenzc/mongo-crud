@@ -1,68 +1,104 @@
 const { MongoClient, ObjectId } = require('mongodb')
 
-// Connection URL
 const url = 'mongodb://localhost:27017'
-
-// Database Name
 const dbName = 'myproject'
 
 const contato = {
   collection: '',
 
-  async add (campos) {
-    return await this.collection.insertOne(campos)
+  add (campos) {
+    return this.collection.insertOne(campos)
   },
 
-  async get (id) {
-    return await this.collection.find({ _id: ObjectId(id) }).toArray()
+  get (id) {
+    return this.collection.find({ _id: ObjectId(id) }).toArray()
   },
 
-  async list () {
-    return await this.collection.find({}).toArray()
+  list () {
+    return this.collection.find({}).toArray()
   },
 
-  async delete (id) {
-    return await this.collection.deleteOne({ _id: ObjectId(id) })
+  delete (id) {
+    return this.collection.deleteOne({ _id: ObjectId(id) })
   },
 
-  async update (id, campos) {
-    return await this.collection.updateOne({ _id: ObjectId(id) }, { $set: campos })
+  update (id, campos) {
+    return this.collection.updateOne({ _id: ObjectId(id) }, { $set: campos })
+  },
+
+  cursor () {
+    return this.collection.find({})
+  },
+
+  deleteAll () {
+    return this.collection.deleteMany({ })
+  }
+}
+
+const db = {
+  client: null,
+  db: null,
+
+  async connect () {
+    this.client = new MongoClient(url, { useUnifiedTopology: true })
+    await this.client.connect()
+    console.log('Connected successfully to mongo')
+    this.db = this.client.db(dbName)
+    contato.collection = this.db.collection('contato')
+  },
+
+  disconnect () {
+    if (this.client) {
+      this.client.close()
+      console.log('Disconnected successfully to mongo')
+    }
   }
 }
 
 const main = async function () {
-  // Create a new MongoClient
-  const client = new MongoClient(url, { useUnifiedTopology: true })
-
   // Use connect method to connect to the Server
-  await client.connect()
-  console.log('Connected successfully to server')
 
-  const db = client.db(dbName)
+  try {
+    await db.connect()
 
-  contato.collection = db.collection('contato')
+    let res
+    res = await contato.add({ nome: 'João' })
+    console.log('add', JSON.stringify(res.insertedId))
+    const id1 = res.insertedId
 
-  let res
-  res = await contato.add({ a: 1 })
-  console.log(JSON.stringify(res.insertedId))
+    res = await contato.add({ nome: 'Pedro' })
+    console.log('add', JSON.stringify(res.insertedId))
+    const id2 = res.insertedId
 
-  const id = res.insertedId
-  res = await contato.get(id)
-  console.log(JSON.stringify(res))
+    res = await contato.get(id1)
+    console.log('get', JSON.stringify(res))
 
-  res = await contato.update(id, { b: 2 })
-  console.log(JSON.stringify(res.nModified))
+    res = await contato.update(id2, { idade: 50, data: new Date(), data2: '2012-12-19T06:01:17.171Z' })
+    console.log('update', JSON.stringify(res.modifiedCount))
 
-  res = await contato.get(id)
-  console.log(JSON.stringify(res))
+    res = await contato.get(id2)
+    console.log('get', JSON.stringify(res))
 
-  res = await contato.delete(id)
-  console.log(JSON.stringify(res.deletedCount))
+    res = await contato.delete(id1)
+    console.log('delete', JSON.stringify(res.deletedCount))
 
-  res = await contato.list()
-  console.log(JSON.stringify(res))
+    res = await contato.list()
+    // console.log('list\n' + res.map(c => JSON.stringify(c)).join('\n'))
+    // console.log('list\n' + res.map(c => Object.values(c).join(', ')).join('\n'))
+    console.table(res)
 
-  client.close()
+    // res = await contato.cursor()
+    // res.forEach(c =>
+    //   console.log('cursor', JSON.stringify(c))
+    // )
+
+    // res = await contato.deleteAll()
+    // console.log('delete', JSON.stringify(res))
+  } catch (error) {
+    console.error(error)
+  } finally {
+    db.disconnect()
+  }
 }
 
 main()
