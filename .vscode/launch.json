@@ -5,22 +5,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "server",
-      "program": "${workspaceFolder}/src/server.js",
+      "name": "server-rest",
+      "program": "${workspaceFolder}/src/server-rest.js",
       "request": "launch",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
       "type": "pwa-node"
     },
     {
-      "type": "pwa-node",
-      "request": "launch",
       "name": "teste-mongodb.js",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "program": "${workspaceFolder}/src/teste-mongodb.js"
+      "program": "${workspaceFolder}/test/teste-mongodb.js",
+      "type": "pwa-node",
+      "request": "launch"
+    },
+    {
+      "name": "teste-rest.js",
+      "program": "${workspaceFolder}/test/teste-rest.js",
+      "type": "pwa-node",
+      "request": "launch"
     }
   ]
 }
