@@ -15,7 +15,7 @@ mongo.client.connect()
     mongo.conn = conn
     mongo.db = conn.db(mongo.dbName)
   })
-  .cacth(error => console.error(error))
+  .catch(error => console.error(error))
 
 const app = express()
 const router = express.Router()
